@@ -10,11 +10,37 @@ const bot = new TelegramBot( BOT_TOKEN, { polling: true } )
 
 const INTERVAL_TIME = 5000
 
-let handleList = {
+let handleList = initHandleList(CONFIG.codeforces.handles)
+
+let chatList = initchatList(CONFIG.telegram.chat_list)
+
+function forceArray(data) {
+    if (!Array.isArray(data) && (data != null || data != undefined)) {
+        data = [data];
+    } else if (data == null || data == undefined) {
+        data = [];
+    }
+    return data;
 }
 
-let chatList = [
-]
+
+function initHandleList(arr) {
+    let rtn = {}
+    forceArray(arr).forEach(h => {
+        rtn[h] = {
+            questions: []
+        }
+    });
+    return rtn;
+}
+
+function initchatList(arr) {
+    let rtn = {}
+    forceArray(arr).forEach(h => {
+        rtn[h] = true
+    });
+    return rtn;
+}
 
 const getUserStatus = (handle) => {
     try {
@@ -48,7 +74,8 @@ bot.onText( /\/signin (.+)/, async ( msg, match ) => {
 
 
 bot.onText( /\/notify/, async ( msg, match ) => {
-    chatList.push(msg.chat.id)
+    console.log(msg.chat.id)
+    chatList[msg.chat.id] = true
     // send a message to the chat acknowledging receipt of their message
     bot.sendMessage(msg.chat.id, `Notify on!`);
 });
@@ -67,7 +94,17 @@ function sleep(ms) {
 
 async function notifyAll(nick, question){
     for(chatIt in chatList){
-        await bot.sendMessage(chatList[chatIt], `OK!🎈\nWho: ${nick}\nProblem: ${question.name}\nTime: ${question.time} ms\nMem: ${question.mem} bytes\n${question.tags.map(t => '#'+t.replace(' ', '_')).join(' ')}`)
+        await bot.sendMessage(chatIt,
+            `OK!🎈\n\
+            Who: ${nick}\n\
+            Problem: ${question.name}\n\
+            ${question.link ? `Link: ${question.link}\n` : ''}\
+            Time: ${question.time} ms\n\
+            Mem: ${question.mem} bytes\n\
+            ${question.tags.map(t => '#'+t.replace(' ', '_')).join(' ')}`,{
+                disable_web_page_preview: true
+            }
+        )
     }
 }
 
@@ -86,6 +123,8 @@ const main = async (handle) => {
                 return {
                     id: subObj.id,
                     name: subObj.problem && subObj.problem.name,
+                    link: subObj.problem && subObj.problem.contestId && subObj.problem.index
+                        && `https://codeforces.com/contest/${subObj.problem.contestId}/problem/${subObj.problem.index}`,
                     tags: subObj.problem && subObj.problem.tags,
                     lang: subObj.programmingLanguage,
                     time: subObj.timeConsumedMillis,
