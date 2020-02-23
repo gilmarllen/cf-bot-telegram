@@ -30,14 +30,7 @@ bot.onText( /\/signin (.+)/, async ( msg, match ) => {
     let msgContent = ''
     console.log(chatID + ' | ' + nickname)
     if(chatID && nickname && nickname.length){
-        if(chatList.indexOf(chatID) !== -1){
-            handleList[nickname] = {
-                questions: [],
-                listener: setInterval(main, INTERVAL_TIME, nickname)
-            }
-            msgContent = 'Telegram User already registered!'
-        } else if(!handleList[nickname]){
-            chatList.push(chatID)
+        if(!handleList[nickname]){
             handleList[nickname] = {
                 questions: [],
                 listener: setInterval(main, INTERVAL_TIME, nickname)
@@ -52,6 +45,13 @@ bot.onText( /\/signin (.+)/, async ( msg, match ) => {
 
     bot.sendMessage(msg.chat.id, msgContent);
 })
+
+
+bot.onText( /\/notify/, async ( msg, match ) => {
+    chatList.push(msg.chat.id)
+    // send a message to the chat acknowledging receipt of their message
+    bot.sendMessage(msg.chat.id, `Notify on!`);
+});
 
 
 bot.onText( /\/start/, async ( msg, match ) => {
