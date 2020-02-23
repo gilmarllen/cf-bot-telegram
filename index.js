@@ -5,7 +5,6 @@ const CONFIG = require('./config.json')
 const BOT_TOKEN = CONFIG.telegram.token
 
 // Bot Telegram
-// Chat ID: 225306807
 const bot = new TelegramBot( BOT_TOKEN, { polling: true } )
 
 const INTERVAL_TIME = 5000
