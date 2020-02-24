@@ -94,7 +94,7 @@ function sleep(ms) {
 async function notifyAll(nick, question){
     for(chatIt in chatList){
         await bot.sendMessage(chatIt,
-            `OK!🎈\n\
+            `YES!🎈\n\
             Who: ${nick}\n\
             Problem: ${question.name}\n\
             ${question.link ? `Link: ${question.link}\n` : ''}\
