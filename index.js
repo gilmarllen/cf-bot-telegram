@@ -1,17 +1,22 @@
 const axios = require('axios')
 const TelegramBot = require( `node-telegram-bot-api` )
+const dotenv = require('dotenv');
+dotenv.config();
 
-const CONFIG = require('./config.json')
-const BOT_TOKEN = CONFIG.telegram.token
+console.log(process.env.CHAT_LIST.split(','))
+
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 
 // Bot Telegram
 const bot = new TelegramBot( BOT_TOKEN, { polling: true } )
 
 const INTERVAL_TIME = 5000
 
-let handleList = initHandleList(CONFIG.codeforces.handles)
+let handleList = initHandleList(process.env.CODEFORCES_HANDLES.split(','))
 
-let chatList = initchatList(CONFIG.telegram.chat_list)
+let chatList = initchatList(process.env.CHAT_LIST.split(','))
+
+console.log(handleList)
 
 function forceArray(data) {
     if (!Array.isArray(data) && (data != null || data != undefined)) {
@@ -36,7 +41,7 @@ function initHandleList(arr) {
 function initchatList(arr) {
     let rtn = {}
     forceArray(arr).forEach(h => {
-        rtn[h] = true
+        rtn[parseInt(h)] = true
     });
     return rtn;
 }
