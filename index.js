@@ -2,6 +2,7 @@ const axios = require('axios')
 const TelegramBot = require( `node-telegram-bot-api` )
 const dotenv = require('dotenv');
 dotenv.config();
+const prettyBytes = require('pretty-bytes')
 
 console.log(process.env.CHAT_LIST.split(','))
 
@@ -15,6 +16,8 @@ const INTERVAL_TIME = 5000
 let handleList = initHandleList(process.env.CODEFORCES_HANDLES.split(','))
 
 let chatList = initchatList(process.env.CHAT_LIST.split(','))
+
+const gifCache = new Set()
 
 console.log(handleList)
 
@@ -49,6 +52,14 @@ function initchatList(arr) {
 const getUserStatus = (handle) => {
     try {
         return axios.get(`https://codeforces.com/api/user.status?handle=${handle}`)
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+const getGif = () => {
+    try {
+        return axios.get(`https://yesno.wtf/api?force=yes`)
     } catch (error) {
         console.error(error)
     }
@@ -90,26 +101,63 @@ bot.onText( /\/start/, async ( msg, match ) => {
     bot.sendMessage(msg.chat.id, `Please, send: "/signin your_CF_handle"`);
 });
 
+bot.onText( /\/test/, async ( msg, match ) => {
+    console.log(msg.chat.id)
+    getGif()
+    .then(res => {
+        let gifURL
+        if(res && res.status === 200 && res.data && res.data.image) {
+            gifURL = res.data.image
+            gifCache.add(res.data.image)
+        } else {
+            gifURL = getRandomItem(Array.from(gifCache))
+        }
+
+        bot.sendDocument(msg.chat.id, gifURL, {
+            caption: `YES!:balloon:
+            Who: hidrogenio3
+            Problem: Another Shortest Path Problem
+            Link: https://codeforces.com/contest/101808/problem/K
+            Time: 1434 ms
+            Mem: 52838400 bytes
+            #graphs #shortest_paths`
+        })
+    })
+});
+
+function getRandomItem(arr) {
+    return arr[Math.floor(Math.random() * arr.length)]
+}
+
 function sleep(ms) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
 }
 
-async function notifyAll(nick, question){
-    for(chatIt in chatList){
-        await bot.sendMessage(chatIt,
-            `YES!🎈\n\
-            Who: ${nick}\n\
-            Problem: ${question.name}\n\
-            ${question.link ? `Link: ${question.link}\n` : ''}\
-            Time: ${question.time} ms\n\
-            Mem: ${question.mem} bytes\n\
-            ${question.tags.map(t => '#'+t.replace(' ', '_')).join(' ')}`,{
-                disable_web_page_preview: true
-            }
-        )
-    }
+function notifyAll(nick, question){
+    getGif()
+    .then(async res => {
+        let gifURL
+        if(res && res.status === 200 && res.data && res.data.image) {
+            gifURL = res.data.image
+            gifCache.add(res.data.image)
+        } else {
+            gifURL = getRandomItem(Array.from(gifCache))
+        }
+
+        for(chatIt in chatList){
+            await bot.sendDocument(chatIt, gifURL, {
+                caption: `YES!🎈\n\
+                Who: ${nick}\n\
+                Problem: ${question.name}\n\
+                ${question.link ? `Link: ${question.link}\n` : ''}\
+                Time: ${question.time} ms\n\
+                ${!isNaN(question.mem) ? 'Mem: ' + prettyBytes(question.mem) + '\n' : ''}\
+                ${question.tags.map(t => '#'+t.replace(' ', '_')).join(' ')}`
+            })
+        }
+    })   
 }
 
 function getLastItem(arr){
