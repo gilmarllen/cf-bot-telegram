@@ -1,2 +1,1 @@
-# cf-bot-telegram
-Codeforces bot submissions info
+# Node, Typescript, Eslint, Prettier, Husky, Commitlint, etc

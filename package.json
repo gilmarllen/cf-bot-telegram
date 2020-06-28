@@ -1,29 +1,66 @@
 {
   "name": "cf-bot-telegram",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Codeforces bot submissions info",
-  "main": "index.js",
+  "main": "src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "build": "tsc --project tsconfig.json && tscpaths -p tsconfig.json -s ./src -o ./dist",
+    "dev": "ts-node-dev src/index.ts",
+    "start": "npm run build && node dist/index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gilmarllen/cf-bot-telegram.git"
   },
-  "author": "Gilmarllen P Miotto",
+  "author": "Gilmarllen P Miotto <gilmarllen@gmail.com>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/gilmarllen/cf-bot-telegram/issues"
   },
   "homepage": "https://github.com/gilmarllen/cf-bot-telegram#readme",
-  "dependencies": {
-    "axios": "^0.19.2",
-    "dotenv": "^8.2.0",
-    "node-telegram-bot-api": "^0.40.0",
-    "pretty-bytes": "^5.3.0"
+  "devDependencies": {
+    "@commitlint/cli": "^8.3.5",
+    "@commitlint/config-conventional": "^8.3.4",
+    "@types/node-telegram-bot-api": "^0.40.3",
+    "@typescript-eslint/eslint-plugin": "^3.0.0",
+    "@typescript-eslint/parser": "^3.0.0",
+    "commitizen": "^4.1.2",
+    "cz-conventional-changelog": "^3.2.0",
+    "eslint": "^7.1.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-import-resolver-typescript": "^2.0.0",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-prettier": "^3.1.3",
+    "husky": "^4.2.5",
+    "jest": "^26.0.1",
+    "lint-staged": "^10.2.6",
+    "prettier": "^2.0.5",
+    "ts-jest": "^26.0.0",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "tsconfig-paths": "^3.9.0",
+    "tscpaths": "^0.0.9",
+    "typescript": "^3.9.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "prepare-commit-msg": "exec < /dev/tty && git cz --hook || true"
+    }
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   },
   "engines": {
     "node": "10.x"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "dotenv": "^8.2.0",
+    "node-telegram-bot-api": "^0.50.0",
+    "queue-typescript": "^1.0.1"
   }
 }
