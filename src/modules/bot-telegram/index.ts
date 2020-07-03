@@ -1,6 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api'
 
-import GifGenerator from '../gif-generator'
+import { getRandomYES } from '../../api/tenor'
 import {
   TypeTelegramBotToken,
   TypeTelegramChatID,
@@ -16,15 +16,16 @@ class BotTelegram {
     this.chatList = chatList
 
     console.log('Connect Bot')
-    // this.bot = new TelegramBot(token, { polling: true })
+    this.bot = new TelegramBot(token, { polling: true })
   }
 
-  public notifyYesQuestion(): void {
-    const gifURL = GifGenerator.getRandom()
-    console.log(gifURL)
-    // this.chatList.forEach(chatID =>
-    //   this.bot.sendDocument(chatID, gifURL, { caption: '' }),
-    // )
+  public async notifyYesQuestion(questionData: string): Promise<void> {
+    const gifURL = await getRandomYES()
+    await Promise.all(
+      this.chatList.map(async chatID =>
+        this.bot.sendDocument(chatID, gifURL, { caption: questionData }),
+      ),
+    )
   }
 }
 

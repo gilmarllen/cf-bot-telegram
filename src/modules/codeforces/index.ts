@@ -1,33 +1,28 @@
 import { Queue } from 'queue-typescript'
-import axios, { AxiosInstance } from 'axios'
+import prettyBytes from 'pretty-bytes'
 
 import BotTelegram from '../bot-telegram'
-import {
-  TypeCodeforcesUserHandle,
-  IUserStatus,
-} from '../../interfaces/codeforces'
+import User from './user'
+import { TypeCodeforcesUserHandle, IResult } from '../../interfaces/codeforces'
 import { delay } from '../../libs/util'
 
-type OptIUserStatus = IUserStatus | undefined
-
-const API_CODEFORCES_DELAY = 5000 + 20
-const BASE_URL = 'https://codeforces.com/api'
+const API_CODEFORCES_DELAY = 200
 
 class Codeforces {
-  handlesList: Queue<TypeCodeforcesUserHandle>
+  users: Queue<User>
   bot: BotTelegram
-  api: AxiosInstance
 
-  constructor(bot: BotTelegram, handlesList: TypeCodeforcesUserHandle[]) {
-    this.handlesList = new Queue<TypeCodeforcesUserHandle>(...handlesList)
+  constructor(bot: BotTelegram) {
     this.bot = bot
-    this.api = axios.create({
-      baseURL: BASE_URL,
-      responseType: 'json',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+  }
+
+  public async loadUsersData(
+    handlesList: TypeCodeforcesUserHandle[],
+  ): Promise<void> {
+    const usersList = handlesList.map(userID => new User(userID))
+    await Promise.all(usersList.map(async user => user.init()))
+
+    this.users = new Queue<User>(...usersList)
   }
 
   public run(): void {
@@ -35,27 +30,40 @@ class Codeforces {
   }
 
   async poolingLoop(): Promise<void> {
-    const handle = this.handlesList.dequeue()
-    const userStatus = await this.getUserStatus(handle)
+    const user = this.users.dequeue()
+    const newAcceptedQuestions = await user.updateAcceptedQuestions()
 
-    // this.bot.notifyYesQuestion()
+    await Promise.all(
+      newAcceptedQuestions.map(async submission =>
+        this.bot.notifyYesQuestion(
+          this.submissionToString(user.id, submission),
+        ),
+      ),
+    )
 
-    this.handlesList.enqueue(handle)
+    this.users.enqueue(user)
     await delay(API_CODEFORCES_DELAY)
     this.poolingLoop()
   }
 
-  async getUserStatus(
-    handle: TypeCodeforcesUserHandle,
-  ): Promise<OptIUserStatus> {
-    try {
-      const response = await this.api.get(`user.status?handle=${handle}`)
-      if (response && response.data.status === 'OK') return response.data
-    } catch (error) {
-      console.error(error)
-    }
+  submissionToString(handleUser: string, submission: IResult): string {
+    const { name } = submission.problem
+    const link = `https://codeforces.com/contest/${submission.problem.contestId}/problem/${submission.problem.index}`
+    const time = submission.timeConsumedMillis
+    const mem = submission.memoryConsumedBytes
+      ? prettyBytes(submission.memoryConsumedBytes)
+      : ''
+    const tags = (submission.problem.tags || [])
+      .map(tag => `#${tag.replace(' ', '_')}`)
+      .join(' ')
 
-    return undefined
+    return `YES!🎈
+          Who: ${handleUser}
+          Problem: ${name}
+          Link: ${link}
+          Time: ${time} ms
+          Mem: ${mem}
+          ${tags}`
   }
 }
 
