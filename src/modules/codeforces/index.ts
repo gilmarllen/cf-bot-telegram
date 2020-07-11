@@ -30,20 +30,28 @@ class Codeforces {
   }
 
   async poolingLoop(): Promise<void> {
-    const user = this.users.dequeue()
-    const newAcceptedQuestions = await user.updateAcceptedQuestions()
-
-    await Promise.all(
-      newAcceptedQuestions.map(async submission =>
-        this.bot.notifyYesQuestion(
-          this.submissionToString(user.id, submission),
+    const run = async () => {
+      const user = this.users.dequeue()
+      const newAcceptedQuestions = await user.updateAcceptedQuestions()
+      await Promise.all(
+        newAcceptedQuestions.map(async submission =>
+          this.bot.notifyYesQuestion(
+            this.submissionToString(user.id, submission),
+          ),
         ),
-      ),
-    )
+      )
 
-    this.users.enqueue(user)
-    await delay(API_CODEFORCES_DELAY)
-    this.poolingLoop()
+      this.users.enqueue(user)
+      await delay(API_CODEFORCES_DELAY)
+    }
+
+    Promise.resolve()
+      .then(async function resolver(): Promise<void> {
+        return run().then(resolver)
+      })
+      .catch(error => {
+        console.log(`Error: ${error}`)
+      })
   }
 
   submissionToString(handleUser: string, submission: IResult): string {
