@@ -1,4 +1,4 @@
-import TelegramBot from 'node-telegram-bot-api'
+import { Telegraf, Context } from 'telegraf'
 
 import { getRandomYES } from '../../api/tenor'
 import {
@@ -9,21 +9,23 @@ import {
 class BotTelegram {
   token: TypeTelegramBotToken
   chatList: TypeTelegramChatID[]
-  bot: TelegramBot
+  bot: Telegraf<Context>
 
   constructor(token: TypeTelegramBotToken, chatList: TypeTelegramChatID[]) {
     this.token = token
     this.chatList = chatList
 
     console.log('Connect Bot')
-    this.bot = new TelegramBot(token, { polling: true })
+    this.bot = new Telegraf(token)
   }
 
   public async notifyYesQuestion(questionData: string): Promise<void> {
     const gifURL = await getRandomYES()
     await Promise.all(
       this.chatList.map(async chatID =>
-        this.bot.sendDocument(chatID, gifURL, { caption: questionData }),
+        this.bot.telegram.sendDocument(chatID, gifURL, {
+          caption: questionData,
+        }),
       ),
     )
   }
