@@ -8,7 +8,7 @@ async function main() {
   const bot = new BotTelegram(env.TELEGRAM_BOT_TOKEN, env.CHAT_LIST)
   const codeforces = new Codeforces(bot)
   await codeforces.loadUsersData(env.CODEFORCES_HANDLES)
-  codeforces.run()
+  await codeforces.run()
 }
 
 main()

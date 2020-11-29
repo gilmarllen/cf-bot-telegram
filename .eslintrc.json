@@ -25,6 +25,7 @@
     ],
     "rules": {
       "prettier/prettier": "error",
+      "no-await-in-loop": "off",
       "no-useless-constructor": "off",
       "class-methods-use-this": "off",
       "semi": ["error", "never"],

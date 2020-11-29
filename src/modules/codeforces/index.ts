@@ -25,12 +25,9 @@ class Codeforces {
     this.users = new Queue<User>(...usersList)
   }
 
-  public run(): void {
-    this.poolingLoop()
-  }
-
-  async poolingLoop(): Promise<void> {
-    const run = async () => {
+  public async run(): Promise<void> {
+    // eslint-disable-next-line
+    while (true) {
       const user = this.users.dequeue()
       const newAcceptedQuestions = await user.updateAcceptedQuestions()
       await Promise.all(
@@ -44,14 +41,6 @@ class Codeforces {
       this.users.enqueue(user)
       await delay(API_CODEFORCES_DELAY)
     }
-
-    Promise.resolve()
-      .then(async function resolver(): Promise<void> {
-        return run().then(resolver)
-      })
-      .catch(error => {
-        console.log(`Error: ${error}`)
-      })
   }
 
   submissionToString(handleUser: string, submission: IResult): string {
